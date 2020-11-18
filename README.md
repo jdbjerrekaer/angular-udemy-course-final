@@ -63,4 +63,8 @@ The course includes the following sections*:
     3. Entry components
     4. Feature Modules
 
-13. NgRX Deep Dive [current]
+13. NgRX Deep Dive
+    1. ngRX Store
+    2. ngRX Reducer
+    3. ngRX Actions
+    4. ngRX Effects
