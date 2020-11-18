@@ -1,10 +1,7 @@
-import { environment } from './../../environments/environment';
-import { Router } from '@angular/router';
-import { User } from './user.model';
-import { HttpClient } from '@angular/common/http';
+import { Store } from '@ngrx/store';
 import { Injectable } from '@angular/core';
-import { throwError, BehaviorSubject } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import * as fromRoot from '../store/app.reducer';
+import * as AuthActions from './store/auth.actions';
 
 export interface AuthResponseData {
   idToken: string;
@@ -19,12 +16,23 @@ export interface AuthResponseData {
   providedIn: 'root'
 })
 export class AuthService {
-  user = new BehaviorSubject<User>(null);
+  /* user = new BehaviorSubject<User>(null); */
   private tokenExpirationTimer: ReturnType<typeof setTimeout>;
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(private store: Store<fromRoot.AppState>) { }
 
-  signUp(email: string, password: string) {
+  setLogoutTimer(expirationDuration: number) {
+    this.tokenExpirationTimer = setTimeout(() => this.store.dispatch(new AuthActions.Logout()), expirationDuration);
+  }
+
+  clearLogoutTimer() {
+    if (this.tokenExpirationTimer) {
+      clearTimeout(this.tokenExpirationTimer);
+      this.tokenExpirationTimer = null;
+    }
+  }
+
+  /* signUp(email: string, password: string) {
     return this.http.post<AuthResponseData>(
       'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + environment.firebaseAPIKey,
       {
@@ -57,23 +65,22 @@ export class AuthService {
       })
     );
 
-  }
+  } */
 
-  logout() {
-    this.user.next(null);
-    this.router.navigate(['auth']);
+  /* logout() {
+    // this.user.next(null);
+    this.store.dispatch(new AuthActions.Logout());
+    // this.router.navigate(['auth']);
     localStorage.removeItem('userDataRecipeBook');
     if (this.tokenExpirationTimer) {
       clearTimeout(this.tokenExpirationTimer);
       this.tokenExpirationTimer = null;
     }
-  }
+  } */
 
-  autoLogout(expirationDuration: number) {
-    this.tokenExpirationTimer = setTimeout(() => this.logout(), expirationDuration);
-  }
 
-  autoLogin() {
+
+  /* autoLogin() {
     const userData: {
       email: string,
       id: string,
@@ -86,13 +93,15 @@ export class AuthService {
 
     const loadedUser = new User(userData.email, userData.id, userData._token, new Date(userData._tokenExperationDate));
     if (loadedUser.token) {
-      this.user.next(loadedUser);
+      // this.user.next(loadedUser); 
+      this.store.dispatch(new AuthActions.Login(loadedUser));
       const expirationTime = new Date(userData._tokenExperationDate).getTime() - new Date().getTime();
       this.autoLogout(expirationTime);
     }
-  }
+  } */
 
-  login(email: string, password: string) {
+
+  /* login(email: string, password: string) {
     return this.http.post<AuthResponseData>(
       'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + environment.firebaseAPIKey,
       {
@@ -124,16 +133,17 @@ export class AuthService {
         this.handleAuthentication(responseData.email, responseData.localId, responseData.idToken, +responseData.expiresIn);
       })
     );
-  }
+  } */
 
   // Optimering?? private handleError()?
 
-  private handleAuthentication(email: string, userID: string, token: string, expiresIn: number) {
+  /* private handleAuthentication(email: string, userID: string, token: string, expiresIn: number) {
     const experationDate = new Date(new Date().getTime() + +expiresIn * 1000);
     const user = new User(email, userID, token, experationDate);
-    this.user.next(user);
+    // this.user.next(user);
+    this.store.dispatch(new AuthActions.Login(user));
     this.autoLogout(expiresIn * 1000);
     localStorage.setItem('userDataRecipeBook', JSON.stringify(user));
-  }
+  } */
 
 }

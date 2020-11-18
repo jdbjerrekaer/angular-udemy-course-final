@@ -1,8 +1,8 @@
-import { AuthService, AuthResponseData } from './auth.service';
-import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
+import * as fromRoot from '../store/app.reducer';
+import * as AuthActions from './store/auth.actions';
 
 @Component({
   selector: 'app-auth',
@@ -18,10 +18,15 @@ export class AuthComponent implements OnInit {
     this.isLoginMode = !this.isLoginMode;
   }
 
-  constructor(private route: Router, private authService: AuthService) {}
+  constructor(private store: Store<fromRoot.AppState>) { }
 
   ngOnInit() {
     this.initForm();
+
+    this.store.select('auth').subscribe(authState => {
+      this.isLoading = authState.loading;
+      this.error = authState.authError;
+    });
   }
 
   private initForm() {
@@ -40,15 +45,17 @@ export class AuthComponent implements OnInit {
     const password = this.loginForm.value.password;
     this.isLoading = true;
 
-    let authObservable: Observable<AuthResponseData>;
+    /* let authObservable: Observable<AuthResponseData>; */
 
     if (this.isLoginMode) {
-      authObservable = this.authService.login(email, password);
+      /* authObservable = this.authService.login(email, password); */
+      this.store.dispatch(new AuthActions.LoginStart({ email, password }));
     } else {
-      authObservable = this.authService.signUp(email, password);
+      /* authObservable = this.authService.signUp(email, password); */
+      this.store.dispatch(new AuthActions.SignupStart({email, password}));
     }
 
-    authObservable.subscribe(
+    /* authObservable.subscribe(
       (responseData) => {
         console.log(responseData);
         this.isLoading = false;
@@ -56,7 +63,7 @@ export class AuthComponent implements OnInit {
       }, errorMessage => {
         this.error = errorMessage;
         this.isLoading = false;
-      });
+      }); */
 
     this.loginForm.reset();
   }
